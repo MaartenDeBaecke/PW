@@ -1,0 +1,407 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Neural Time-Optimal MPC · Maarten De Baecke</title>
+<meta name="description" content="An Integrated Architecture for Data-Efficient Real-Time Neural Imitation of Nonlinear Time-Optimal Model Predictive Control.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&family=IBM+Plex+Mono:wght@400&display=swap">
+<style>
+  /* Same system as the homepage, a slightly wider column so the two videos can sit side by side. */
+  :root {
+    --bg: #f7f8f6;
+    --fg: #1d2220;
+    --muted: #6b726e;
+    --rule: #dfe3df;
+    --accent: #2f5d57;
+    --code-bg: #eef1ee;
+    /* diagram block colours: MPC, NN training loop, controller, hardware */
+    --mpc-fill: #f7e6e3; --mpc-line: #a5554a;
+    --nn-fill: #e2f0f1;  --nn-line: #3f7f86;
+    --ctl-fill: #e4e8f4; --ctl-line: #4d5f99;
+    --hw-fill: #e5f1e3;  --hw-line: #4f8547;
+    --badge: #2b302d; --badge-fg: #ffffff;
+    --serif: "Newsreader", "Iowan Old Style", Georgia, serif;
+    --mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #141716; --fg: #e3e6e3; --muted: #8d9590; --rule: #2c312e; --accent: #8fc2b8; --code-bg: #1b1f1d;
+      --mpc-fill: #3a2522; --mpc-line: #d98a7f;
+      --nn-fill: #1d3033;  --nn-line: #7dbcc3;
+      --ctl-fill: #23283a; --ctl-line: #98a6d8;
+      --hw-fill: #213120;  --hw-line: #8fc286;
+      --badge: #e3e6e3; --badge-fg: #141716;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #141716; --fg: #e3e6e3; --muted: #8d9590; --rule: #2c312e; --accent: #8fc2b8; --code-bg: #1b1f1d;
+    --mpc-fill: #3a2522; --mpc-line: #d98a7f;
+    --nn-fill: #1d3033;  --nn-line: #7dbcc3;
+    --ctl-fill: #23283a; --ctl-line: #98a6d8;
+    --hw-fill: #213120;  --hw-line: #8fc286;
+    --badge: #e3e6e3; --badge-fg: #141716;
+    color-scheme: dark;
+  }
+
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--fg);
+    font-family: var(--serif);
+    font-size: 1.125rem;
+    line-height: 1.6;
+    font-optical-sizing: auto;
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
+  }
+  main {
+    max-width: 44rem;
+    margin: 0 auto;
+    padding-block: clamp(2rem, 7vw, 4.5rem) 4rem;
+    display: grid;
+    gap: 2.5rem;
+  }
+  main > * { min-width: 0; }
+
+  a { color: inherit; text-decoration: underline; text-decoration-color: var(--rule); text-underline-offset: 0.2em; text-decoration-thickness: 1px; transition: color .15s, text-decoration-color .15s; }
+  a:hover { color: var(--accent); text-decoration-color: currentColor; }
+  a:focus-visible, summary:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 2px; }
+
+  .back { font-family: var(--mono); font-size: 0.75rem; color: var(--muted); }
+  .back a { text-decoration-color: transparent; }
+
+  h1 {
+    font-weight: 500;
+    font-size: clamp(1.6rem, 4.2vw, 2.1rem);
+    line-height: 1.2;
+    letter-spacing: -0.01em;
+    margin: 0 0 1rem;
+    text-wrap: balance;
+  }
+  .authors { margin: 0; font-size: 1.05rem; }
+  .authors sup { font-size: 0.65em; color: var(--muted); margin-left: 0.05em; }
+  .affils {
+    margin: 0.5rem 0 0; padding: 0; list-style: none;
+    font-size: 0.9rem; color: var(--muted); display: grid; gap: 0.1rem;
+  }
+  .affils sup { font-size: 0.7em; margin-right: 0.2em; }
+
+  .links {
+    display: flex; flex-wrap: wrap; gap: 0.25rem 1.25rem; margin-top: 1.25rem;
+    font-family: var(--mono); font-size: 0.8rem; color: var(--muted);
+  }
+  .links .venue { color: var(--fg); }
+
+  h2 {
+    font-family: var(--mono);
+    font-weight: 400;
+    font-size: 0.75rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin: 0 0 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--rule);
+  }
+  section > p { margin: 0 0 1rem; max-width: 40rem; }
+  section > p:last-child { margin-bottom: 0; }
+
+  /* Collapsible blocks (abstract, citation) */
+  details.fold > summary {
+    list-style: none; cursor: pointer;
+    display: flex; align-items: center; gap: 0.6rem;
+    font-family: var(--mono); font-size: 0.75rem; letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--muted);
+    padding-bottom: 0.5rem; border-bottom: 1px solid var(--rule);
+    transition: color .15s;
+  }
+  details.fold > summary::-webkit-details-marker { display: none; }
+  details.fold > summary:hover { color: var(--accent); }
+  details.fold > summary .chev {
+    display: inline-grid; place-items: center;
+    width: 1.35rem; height: 1.35rem; border: 1px solid var(--rule); border-radius: 50%;
+    transition: transform .2s, border-color .15s;
+  }
+  details.fold > summary:hover .chev { border-color: currentColor; }
+  details.fold[open] > summary .chev { transform: rotate(90deg); }
+  details.fold > summary .hint { margin-left: auto; letter-spacing: 0.02em; text-transform: none; }
+  details.fold[open] > summary .hint .when-closed,
+  details.fold:not([open]) > summary .hint .when-open { display: none; }
+  details.fold > .body { padding-top: 1rem; }
+  details.fold > .body p { margin: 0; max-width: 40rem; }
+
+  .bib { position: relative; }
+  .bib pre {
+    margin: 0; padding: 1rem 1.1rem; overflow-x: auto;
+    background: var(--code-bg); border: 1px solid var(--rule); border-radius: 3px;
+    font-family: var(--mono); font-size: 0.78rem; line-height: 1.55;
+  }
+  .bib button {
+    position: absolute; top: 0.5rem; right: 0.5rem;
+    font-family: var(--mono); font-size: 0.7rem; color: var(--muted);
+    background: var(--bg); border: 1px solid var(--rule); border-radius: 3px;
+    padding: 0.2rem 0.55rem; cursor: pointer;
+  }
+  .bib button:hover { color: var(--accent); border-color: currentColor; }
+  .bib-note { font-size: 0.85rem; color: var(--muted); margin: 0.5rem 0 0; }
+
+  .setup { display: flex; flex-wrap: wrap; gap: 0.25rem 2rem; margin: 0 0 1.25rem; font-size: 0.95rem; }
+  .setup div { display: flex; gap: 0.6rem; align-items: baseline; }
+  .setup dt { font-family: var(--mono); font-size: 0.7rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+  .setup dd { margin: 0; }
+  .videos { display: grid; grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); gap: 1.5rem; }
+  figure { margin: 0; display: grid; gap: 0.5rem; align-content: start; }
+  /* Show only the middle 60% of each video's height (20% cut from top and bottom). */
+  .crop {
+    overflow: hidden; border-radius: 3px; background: var(--rule);
+    aspect-ratio: var(--ar, 16 / 5.4);
+  }
+  .crop video {
+    display: block; width: 100%; height: 100%; max-width: 100%;
+    object-fit: cover; object-position: center;
+  }
+  figcaption { font-size: 0.95rem; color: var(--muted); line-height: 1.45; }
+  figcaption b { font-weight: 500; color: var(--fg); }
+  .missing .crop { display: none; }
+  .missing::before {
+    content: "video coming soon";
+    display: grid; place-items: center; aspect-ratio: 16 / 9;
+    font-family: var(--mono); font-size: 0.75rem; color: var(--muted);
+    border: 1px dashed var(--rule); border-radius: 3px;
+  }
+
+  /* Architecture diagram */
+  .diagram { overflow-x: auto; margin: 0 0 1rem; }
+  .diagram svg { display: block; width: 100%; min-width: 34rem; height: auto; }
+  .diagram text { font-family: var(--serif); fill: var(--fg); }
+  .diagram .t { font-size: 13px; font-weight: 500; }
+  .diagram .s { font-size: 11px; fill: var(--muted); }
+  .diagram .lab { font-size: 12px; font-style: italic; fill: var(--muted); }
+  .diagram .leg { font-family: var(--mono); font-size: 10px; fill: var(--muted); }
+  .diagram .mpc { fill: var(--mpc-fill); stroke: var(--mpc-line); }
+  .diagram .nn  { fill: var(--nn-fill);  stroke: var(--nn-line); }
+  .diagram .ctl { fill: var(--ctl-fill); stroke: var(--ctl-line); }
+  .diagram .hw  { fill: var(--hw-fill);  stroke: var(--hw-line); }
+  .diagram .box { stroke-width: 1.3; }
+  .diagram .expert { stroke-width: 2; }
+  .diagram .sep { stroke: currentColor; stroke-width: 0.6; opacity: 0.35; }
+  .diagram .arr { fill: none; stroke: var(--muted); stroke-width: 1.3; }
+  .diagram .head { fill: var(--muted); }
+  .diagram .badge rect { fill: var(--badge); }
+  .diagram .badge text { fill: var(--badge-fg); font-family: var(--mono); font-size: 9px; font-weight: 400; }
+
+  .roman {
+    display: inline-block; min-width: 1.4em; padding: 0 0.25em;
+    font-family: var(--mono); font-size: 0.68em; line-height: 1.5; text-align: center;
+    background: var(--badge); color: var(--badge-fg); border-radius: 2px;
+    vertical-align: 0.12em;
+  }
+
+  .contrib { list-style: none; margin: 0; padding: 0; display: grid; gap: 1.1rem; counter-reset: c; }
+  .contrib li { display: grid; grid-template-columns: 2rem 1fr; counter-increment: c; }
+  .contrib li::before {
+    content: "(" counter(c, lower-roman) ")";
+    font-family: var(--mono); font-size: 0.8rem; color: var(--accent); padding-top: 0.25rem;
+  }
+  .contrib b { font-weight: 500; }
+
+  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr)); gap: 1rem; margin: 0 0 1rem; }
+  .stat { border-top: 2px solid var(--accent); padding-top: 0.6rem; }
+  .stat .num { font-size: 1.7rem; font-weight: 500; line-height: 1.15; letter-spacing: -0.01em; }
+  .stat .num small { font-size: 0.55em; color: var(--muted); font-weight: 400; }
+  .stat .what { font-size: 0.92rem; color: var(--muted); line-height: 1.4; margin-top: 0.3rem; }
+
+  .spikes { display: block; width: 100%; height: 16px; color: var(--rule); }
+
+  footer { font-family: var(--mono); font-size: 0.72rem; color: var(--muted); }
+
+  @media (prefers-reduced-motion: reduce) { a, details.fold > summary .chev { transition: none; } }
+</style>
+</head>
+<body>
+<main>
+  <!-- <nav class="back"><a href="../index.html">← Maarten De Baecke</a></nav> -->
+
+  <header>
+    <h1>An Integrated Architecture for Data-Efficient Real-Time Neural Imitation of Nonlinear Time-Optimal Model Predictive Control</h1>
+    <p class="authors">
+      <a href="https://scholar.google.com/citations?user=YD2ajUAAAAAJ">Maarten De Baecke</a><sup>1</sup>,
+      <a href="https://scholar.google.com/citations?user=cGgoHBUAAAAJ">Flavia Sofia Acerbo</a><sup>1</sup>,
+      <a href="https://scholar.google.com/citations?user=zr1ylKIAAAAJ">Andrea Giusti</a><sup>2</sup>,
+      <a href="https://scholar.google.com/citations?user=ZgAnArUAAAAJ">Wilm Decré</a><sup>1</sup>
+    </p>
+    <ul class="affils">
+      <li><sup>1</sup>KU Leuven, Dept. of Mechanical Engineering, MECO Research Team &amp; Flanders Make@KU Leuven</li>
+      <li><sup>2</sup>Flanders Make vzw, Lommel, Belgium</li>
+    </ul>
+    <div class="links">
+      <span class="venue">In preparation</span>
+      <!-- <a href="https://arxiv.org/abs/XXXX.XXXXX">arXiv</a> -->
+      <a href="thesis.pdf">additional material (master's thesis)</a>
+      <a href="#cite">cite</a>
+    </div>
+  </header>
+
+  <details class="fold" id="cite">
+    <summary>
+      <span class="chev" aria-hidden="true"><svg width="9" height="9" viewBox="0 0 10 10"><path d="M3 1.5 6.5 5 3 8.5" fill="none" stroke="currentColor" stroke-width="1.5"/></svg></span>
+      Citation
+      <span class="hint"><span class="when-closed">show BibTeX</span><span class="when-open">hide</span></span>
+    </summary>
+    <div class="body">
+      <div class="bib">
+        <!-- TODO: replace with the final reference once published -->
+        <pre id="bibtex">@article{debaecke2026neural,
+  title   = {An Integrated Architecture for Data-Efficient Real-Time Neural
+             Imitation of Nonlinear Time-Optimal Model Predictive Control},
+  author  = {De Baecke, Maarten and Acerbo, Flavia Sofia and
+             Giusti, Andrea and Decr{\'e}, Wilm},
+  journal = {TBD},
+  year    = {2026},
+  note    = {In preparation}
+}</pre>
+        <button type="button" id="copy-bib">copy</button>
+      </div>
+      <p class="bib-note">Placeholder. The final reference will appear here once the paper is published.</p>
+    </div>
+  </details>
+
+  <details class="fold">
+    <summary>
+      <span class="chev" aria-hidden="true"><svg width="9" height="9" viewBox="0 0 10 10"><path d="M3 1.5 6.5 5 3 8.5" fill="none" stroke="currentColor" stroke-width="1.5"/></svg></span>
+      Abstract
+      <span class="hint"><span class="when-closed">read</span><span class="when-open">hide</span></span>
+    </summary>
+    <div class="body">
+      <p>
+        Nonlinear time-optimal model predictive control (MPC) enables highly performant control
+        of constrained systems, but its computational cost prohibits real-time use on fast
+        dynamical systems. Neural network imitation of the MPC control law can reduce online
+        computational costs, yet existing work mostly targets quadratic-tracking formulations in
+        simulation and addresses the challenges of such controllers in isolation. This work
+        imitates a long-horizon, nonconvex, time-optimal MPC with hard terminal constraints, whose
+        high computational cost strongly limits training-data generation. We present (i)
+        <em>self-informed sampling (SIFS)</em>, a data-efficient expert-sampling strategy that uses
+        a learned time-to-go to query the expert only where the policy deviates from time-optimal
+        behavior, (ii) a complete training and control architecture that jointly addresses dataset
+        correlation, suboptimal expert labels, covariate shift, constraint satisfaction and model
+        mismatch, and (iii) real-world validation on a Furuta pendulum. SIFS matches the
+        performance of standard dataset aggregation about three times faster and with less than
+        half the data. The resulting controller attains a region of attraction on par with the
+        expert MPC while raising the reliable control frequency from 1.4&nbsp;Hz to 1&nbsp;kHz. On
+        hardware, the controller swings up and stabilizes the pendulum along trajectories closely
+        matching the expert MPC solution.
+      </p>
+    </div>
+  </details>
+
+  <section aria-labelledby="hw">
+    <h2 id="hw">Hardware experiments</h2>
+    <dl class="setup">
+      <div><dt>Reference</dt><dd>pendulum upright, base angle zero</dd></div>
+      <div><dt>Constraint</dt><dd> &minus;&pi;/2&nbsp;&le;&nbsp;base angle&nbsp;&le;&nbsp;&pi;/2</dd></div>
+    </dl>
+    <div class="videos">
+      <figure>
+        <div class="crop"><video autoplay muted loop playsinline preload="auto">
+          <source src="videos/swing_up.mp4" type="video/mp4">
+        </video></div>
+        <figcaption><b>Swing-up.</b> The neural controller can swing up and stabilize the pendulum close to time-optimal.</figcaption>
+      </figure>
+      <figure>
+        <div class="crop"><video autoplay muted loop playsinline preload="auto">
+          <source src="videos/disturbance_rejection.mp4" type="video/mp4">
+        </video></div>
+        <figcaption><b>Stabilization under disturbance.</b> The neural controller handles disturbances successfully.</figcaption>
+      </figure>
+    </div>
+  </section>
+
+ 
+
+  <section aria-labelledby="contrib">
+    <h2 id="contrib">Contributions</h2>
+    <ol class="contrib">
+      <li><div><b>Self-informed sampling (SIFS).</b> A data-efficient alternative to DAgger. The network
+        predicts its own time-to-go, and a break in the expected linear decrease flags the states where
+        the policy deviates from time-optimal behavior. Only those states are sent to the expert.</div></li>
+      <li><div><b>A complete training and control architecture.</b> One pipeline that jointly handles
+        dataset correlation, conflicting expert labels, covariate shift, constraint satisfaction and
+        plant–model mismatch, problems that earlier work tackled one at a time.</div></li>
+      <li><div><b>Real-world validation.</b> Deployment on a physical Furuta pendulum, imitating a
+        long-horizon, nonconvex time-optimal MPC with hard terminal constraints.</div></li>
+    </ol>
+  </section>
+
+  <section aria-labelledby="res">
+    <h2 id="res">Results</h2>
+    <div class="stats">
+      <div class="stat">
+        <div class="num">1.4 Hz <small>→</small> 1 kHz</div>
+        <div class="what">Reliable control frequency, expert MPC vs. NNMPC.</div>
+      </div>
+      <div class="stat">
+        <div class="num">~3× <small>faster training</small></div>
+        <div class="what">SIFS matches DAgger's performance with less than half the expert data making training 3 times faster.</div>
+      </div>
+      <div class="stat">
+        <div class="num">95.7% <small>vs.</small> 95.8%</div>
+        <div class="what">Success rate of NNMPC and expert MPC over 1000 random initial states, a region of attraction on par.</div>
+      </div>
+    </div>
+
+  </section>
+
+  <svg class="spikes" viewBox="0 0 704 16" preserveAspectRatio="none" aria-hidden="true">
+    <g stroke="currentColor" stroke-width="1" vector-effect="non-scaling-stroke">
+      <path d="M0 15.5H704" />
+      <path d="M52 15V3M58 15V3M63 15V3 M160 15V6 M262 15V2M267 15V2M271 15V2M276 15V2 M390 15V8 M452 15V3M458 15V3M463 15V3 M572 15V5M578 15V5 M660 15V2M665 15V2M669 15V2M674 15V2" />
+    </g>
+  </svg>
+
+  <footer>
+    Supported by Flanders Make through SBO project LearnOpTra.
+  </footer>
+</main>
+<script>
+  // If a video file is not there yet, show a quiet placeholder instead of a broken player.
+  document.querySelectorAll('figure video source').forEach(function (src) {
+    src.addEventListener('error', function () { src.closest('figure').classList.add('missing'); });
+  });
+
+  // Some browsers ignore the autoplay attribute; nudge muted videos to start.
+  document.querySelectorAll('figure video').forEach(function (v) {
+    // Size the crop box to the video's own aspect ratio with 60% of its height kept.
+    function fit() {
+      if (v.videoWidth && v.videoHeight)
+        v.parentNode.style.setProperty('--ar', v.videoWidth + ' / ' + (v.videoHeight * 0.6));
+    }
+    if (v.readyState >= 1) fit(); else v.addEventListener('loadedmetadata', fit);
+    v.muted = true;
+    var p = v.play();
+    if (p && p.catch) p.catch(function () {});
+  });
+
+  // The "cite" link opens the citation block.
+  var cite = document.getElementById('cite');
+  document.querySelectorAll('a[href="#cite"]').forEach(function (a) {
+    a.addEventListener('click', function () { cite.open = true; });
+  });
+  if (location.hash === '#cite') cite.open = true;
+
+  document.getElementById('copy-bib').addEventListener('click', function () {
+    var btn = this, text = document.getElementById('bibtex').textContent;
+    if (!navigator.clipboard) return;
+    navigator.clipboard.writeText(text).then(function () {
+      btn.textContent = 'copied';
+      setTimeout(function () { btn.textContent = 'copy'; }, 1500);
+    });
+  });
+</script>
+</body>
+</html>

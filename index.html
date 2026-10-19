@@ -1,0 +1,283 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Maarten De Baecke</title>
+<meta name="description" content="Maarten De Baecke, PhD fellow working on neuromorphic control at KU Leuven, Cambridge and Bologna.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&family=IBM+Plex+Mono:wght@400&display=swap">
+<style>
+  /* Layout: one quiet column, left-aligned; a faint spike train as the only ornament. */
+  :root {
+    --bg: #f7f8f6;
+    --fg: #1d2220;
+    --muted: #6b726e;
+    --rule: #dfe3df;
+    --accent: #2f5d57;
+    --serif: "Newsreader", "Iowan Old Style", Georgia, serif;
+    --mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #141716; --fg: #e3e6e3; --muted: #8d9590; --rule: #2c312e; --accent: #8fc2b8;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #141716; --fg: #e3e6e3; --muted: #8d9590; --rule: #2c312e; --accent: #8fc2b8;
+    color-scheme: dark;
+  }
+
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    background: var(--bg);
+    color: var(--fg);
+    font-family: var(--serif);
+    font-size: 1.125rem;
+    line-height: 1.6;
+    font-optical-sizing: auto;
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
+  }
+  main {
+    max-width: 36rem;
+    margin: 0 auto;
+    padding-block: clamp(3rem, 10vw, 7rem) 4rem;
+    display: grid;
+    gap: 2.75rem;
+  }
+
+  a { color: inherit; text-decoration: underline; text-decoration-color: var(--rule); text-underline-offset: 0.2em; text-decoration-thickness: 1px; transition: color .15s, text-decoration-color .15s; }
+  a:hover { color: var(--accent); text-decoration-color: currentColor; }
+  a:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 2px; }
+
+  /* Header */
+  .id { display: flex; align-items: center; gap: 1.25rem; }
+  .id img {
+    width: 84px; height: 84px; flex: none;
+    border-radius: 50%; object-fit: cover;
+    background: var(--rule);
+  }
+  .id div { min-width: 0; }
+  h1 {
+    font-weight: 500;
+    font-size: 2rem;
+    line-height: 1.15;
+    letter-spacing: -0.01em;
+    margin: 0 0 0.3rem;
+    text-wrap: balance;
+  }
+  .role { margin: 0; color: var(--muted); font-size: 1rem; line-height: 1.45; }
+
+  .affil {
+    margin: 1.5rem 0 0; padding: 0; list-style: none;
+    display: grid; gap: 0.2rem;
+    font-size: 0.95rem; color: var(--muted);
+  }
+  .affil b { font-weight: 500; color: var(--fg); }
+
+  .prose { display: grid; gap: 1rem; }
+  .prose p { margin: 0; }
+  .prose em { font-style: italic; }
+  .advisors { font-size: 0.95rem; color: var(--muted); margin-top: -0.4rem !important; }
+  .vision { color: var(--muted); }
+  .vision strong { font-weight: 400; color: var(--fg); }
+
+  .links {
+    display: flex; flex-wrap: wrap; gap: 0.25rem 1.25rem;
+    font-family: var(--mono); font-size: 0.8rem; color: var(--muted);
+  }
+  .links a { text-decoration-color: transparent; }
+  .links a:hover { text-decoration-color: currentColor; }
+
+  /* Spike train divider */
+  .spikes { display: block; width: 100%; height: 16px; color: var(--rule); }
+
+  h2 {
+    font-family: var(--mono);
+    font-weight: 400;
+    font-size: 0.75rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin: 0 0 1.25rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--rule);
+  }
+  h3 {
+    font-weight: 400; font-style: italic;
+    font-size: 1rem; color: var(--muted);
+    margin: 0 0 0.75rem;
+  }
+
+  .topic + .topic { margin-top: 2rem; }
+  ul.papers { list-style: none; margin: 0; padding: 0; display: grid; gap: 1.25rem; }
+  .paper { display: grid; gap: 0.15rem; }
+  .paper .title { font-size: 1.125rem; line-height: 1.4; }
+  .paper .authors { font-size: 0.95rem; color: var(--muted); }
+  .paper .authors .me { color: var(--fg); }
+  .paper .meta {
+    font-family: var(--mono); font-size: 0.75rem; color: var(--muted);
+    display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 0.9rem; margin-top: 0.15rem;
+  }
+  .paper .meta .venue { color: var(--fg); }
+
+  /* Abstract toggle */
+  .toggle {
+    font: inherit; color: inherit; background: none; border: 0; padding: 0;
+    cursor: pointer; display: inline-flex; align-items: baseline; gap: 0.35em;
+    transition: color .15s;
+  }
+  .toggle:hover { color: var(--accent); }
+  .toggle .sign { display: inline-block; width: 0.7em; text-align: center; }
+  .abstract {
+    display: grid; grid-template-rows: 0fr;
+    transition: grid-template-rows .25s ease;
+  }
+  .abstract > div { overflow: hidden; min-height: 0; }
+  .abstract p {
+    margin: 0.6rem 0 0.2rem;
+    padding-left: 0.9rem;
+    border-left: 1px solid var(--rule);
+    font-size: 0.95rem; line-height: 1.55; color: var(--muted);
+  }
+  .paper.open .abstract { grid-template-rows: 1fr; }
+
+  footer { font-family: var(--mono); font-size: 0.72rem; color: var(--muted); }
+
+  @media (max-width: 420px) {
+    .id img { width: 68px; height: 68px; }
+    h1 { font-size: 1.7rem; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    a, .toggle, .abstract { transition: none; }
+  }
+  body { margin: 0; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <div class="id">
+      <!-- Photo: put your image at img/maarten.jpg (square, ~480px) -->
+      <img src="img/maarten.jpg" alt="Portrait of Maarten De Baecke" width="84" height="84">
+      <div>
+        <h1>Maarten De Baecke</h1>
+        <p class="role">Engineer (ir.) · PhD fellow, Research Foundation – Flanders (FWO)</p>
+      </div>
+    </div>
+    <ul class="affil">
+      <li><b>KU Leuven</b> · STADIUS, Dept. of Electrical Engineering (ESAT)</li>
+      <li><b>University of Cambridge</b> · Control Group, Dept. of Engineering</li>
+      <li><b>University of Bologna</b> · Laboratory of Automation and Robotics</li>
+    </ul>
+  </header>
+
+  <section class="prose" aria-label="About">
+    <p>
+      I work on <em>neuromorphic control</em>: controllers that act through sparse, precisely
+      timed events, the way nervous systems do, rather than on fixed grids in time or space.
+      My goal is to make optimal control scalable, developing a hierarchical,
+      event-driven form of model predictive control. In collaboration with the University of Bologna, I apply this to power electronics, targeting control that is currently out of reach, yet increasingly needed.
+    </p>
+    <p class="advisors">
+      Advised by Prof. dr. ir. Rodolphe Sepulchre and Prof. dr. Fulvio Forni,
+      in collaboration with Dr. Alessandro Bosso.
+    </p>
+    <!-- <p class="vision">
+      <strong>I believe engineering is a way to make the world better.</strong>
+       That takes the nerve to rethink what we take for granted,
+       and the responsibility to weigh what our solutions cost, in energy and compute as much as anything else.
+    </p> -->
+    <nav class="links" aria-label="Contact and profiles">
+      <a href="https://scholar.google.com/citations?user=YD2ajUAAAAAJ&amp;hl=nl">scholar</a>
+      <a href="https://www.linkedin.com/in/maarten-de-baecke-2623b2250">linkedin</a>
+    </nav>
+  </section>
+
+  <svg class="spikes" viewBox="0 0 576 16" preserveAspectRatio="none" aria-hidden="true">
+    <g stroke="currentColor" stroke-width="1" vector-effect="non-scaling-stroke">
+      <path d="M0 15.5H576" />
+      <path d="M38 15V3M44 15V3M49 15V3 M131 15V6 M212 15V2M217 15V2M221 15V2M226 15V2 M318 15V8 M371 15V3M377 15V3M382 15V3 M468 15V5M474 15V5 M540 15V2M545 15V2M549 15V2M554 15V2" />
+    </g>
+  </svg>
+
+  <section aria-labelledby="pubs">
+    <h2 id="pubs">Publications</h2>
+    <!-- Show / hide a paper: add the word  hidden  to its <li>, e.g. <li class="paper" hidden>.
+         Topics and the whole Publications section disappear automatically when they have no visible papers. -->
+    <div class="topic">
+    <h3>Learning-based optimal control · from my MSc thesis</h3>
+    <ul class="papers">
+      <!-- Paper entry: copy this whole <li> for a new paper. Give each abstract a unique id
+           (abs-1, abs-2, ...) and point the button's aria-controls at it. -->
+      <li class="paper">
+        <span class="title"><a href="neural-tompc/index.html">An Integrated Architecture for Data-Efficient Real-Time Neural Imitation of Nonlinear Time-Optimal Model Predictive Control</a></span>
+        <span class="authors"><span class="me">Maarten De Baecke</span>, Flavia Sofia Acerbo, Andrea Giusti, Wilm Decré</span>
+        <span class="meta">
+          <span class="venue">In preparation</span>
+          <button class="toggle" type="button" aria-expanded="false" aria-controls="abs-1"><span class="sign" aria-hidden="true">+</span>abstract</button>
+        </span>
+        <div class="abstract" id="abs-1">
+          <div>
+            <p>
+              Nonlinear time-optimal model predictive control (MPC) enables highly performant control
+              of constrained systems, but its computational cost prohibits real-time use on fast
+              dynamical systems. Neural network imitation of the MPC control law can reduce online
+              computational costs, yet existing work mostly targets quadratic-tracking formulations in
+              simulation and addresses the challenges of such controllers in isolation. This work
+              imitates a long-horizon, nonconvex, time-optimal MPC with hard terminal constraints, whose
+              high computational cost strongly limits training-data generation. We present (i)
+              <em>self-informed sampling (SIFS)</em>, a data-efficient expert-sampling strategy that uses
+              a learned time-to-go to query the expert only where the policy deviates from time-optimal
+              behavior, (ii) a complete training and control architecture that jointly addresses dataset
+              correlation, suboptimal expert labels, covariate shift, constraint satisfaction and model
+              mismatch, and (iii) real-world validation on a Furuta pendulum. SIFS matches the
+              performance of standard dataset aggregation about three times faster and with less than
+              half the data. The resulting controller attains a region of attraction on par with the
+              expert MPC while raising the reliable control frequency from 1.4&nbsp;Hz to 1&nbsp;kHz. On
+              hardware, the controller swings up and stabilizes the pendulum along trajectories closely
+              matching the expert MPC solution.
+            </p>
+          </div>
+        </div>
+      </li>
+    </ul>
+    </div>
+  </section>
+
+  <footer>
+    Previously MSc Mechanical Engineering (Mechatronics &amp; Robotics), KU Leuven,
+    thesis with the MECO Research Team.
+  </footer>
+</main>
+<script>
+  // Hide topics, and the Publications section, that have no visible papers left.
+  document.querySelectorAll('.topic').forEach(function (t) {
+    if (!t.querySelector('.paper:not([hidden])')) t.hidden = true;
+  });
+  var pubs = document.getElementById('pubs').closest('section');
+  if (!pubs.querySelector('.topic:not([hidden])')) {
+    pubs.hidden = true;
+    var sp = document.querySelector('.spikes');
+    if (sp) sp.style.display = 'none';
+  }
+
+  // Abstract toggles: works for every .paper on the page; hidden abstracts are inert for screen readers.
+  document.querySelectorAll('.paper').forEach(function (paper) {
+    var btn = paper.querySelector('.toggle');
+    var abs = paper.querySelector('.abstract');
+    if (!btn || !abs) return;
+    abs.setAttribute('inert', '');
+    btn.addEventListener('click', function () {
+      var open = paper.classList.toggle('open');
+      btn.setAttribute('aria-expanded', open);
+      btn.querySelector('.sign').textContent = open ? '−' : '+';
+      if (open) abs.removeAttribute('inert'); else abs.setAttribute('inert', '');
+    });
+  });
+</script>
+</body>
+</html>
